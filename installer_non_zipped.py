@@ -121,17 +121,17 @@ class non_zipped_installer(mobase.IPluginInstallerCustom):
     def isActive(self):
         return self._organizer.pluginSetting(self.name(), "enabled")
 
-    def settings(self) -> list[mobase.PluginSetting]:  # type: ignore
+    def settings(self):  # type: ignore
         return []  # type: ignore
 
-    def settingGroups(self) -> list[mobase.PluginSettingGroup]:  # type: ignore
+    def settingGroups(self):  # type: ignore
         return []  # type: ignore
 
     def priority(self):
         return 999
 
     def version(self):
-        return mobase.VersionInfo(0, 0, 2, 1)
+        return mobase.VersionInfo(0, 0, 2, 7)
 
 
 def createPlugin() -> mobase.IPluginInstaller:

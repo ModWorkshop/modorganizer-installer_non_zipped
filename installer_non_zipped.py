@@ -12,9 +12,9 @@ class non_zipped_installer(mobase.IPluginInstallerCustom):
     installed_mods: dict[str, list[str]]
 
     def supportedExtensions(self):
-        acceptedExt = {"pak", "utoc", "ucas", "bundle", "bk2", "ugc", "pck", "dll"}
+        acceptedExt = {"pak", "utoc", "ucas", "bundle", "bk2", "ugc", "pck", "dll", "vmz", "pck"}
         if self._organizer.managedGame().gameName() == "Road to Vostok":
-            acceptedExt = {"zip", "pck"}
+            acceptedExt = {"zip"}
         return acceptedExt
 
     def updateMetaINI(self, file_path: str, new_mod: mobase.IModInterface):
@@ -131,7 +131,7 @@ class non_zipped_installer(mobase.IPluginInstallerCustom):
         return 999
 
     def version(self):
-        return mobase.VersionInfo(0, 0, 2, 7)
+        return mobase.VersionInfo(0, 0, 2, 8)
 
 
 def createPlugin() -> mobase.IPluginInstaller:

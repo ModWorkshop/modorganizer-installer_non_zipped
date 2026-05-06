@@ -6,7 +6,6 @@ from PyQt6.QtCore import QSettings, QTimer
 
 import mobase
 
-
 class non_zipped_installer(mobase.IPluginInstallerCustom):
     # Add supported file extensions that only need to be copied into a mod
     installed_mods: dict[str, list[str]]
@@ -49,7 +48,11 @@ class non_zipped_installer(mobase.IPluginInstallerCustom):
         settings = QSettings(path, QSettings.Format.IniFormat, None)
         settings.setValue("installationfile", archive_name)
         settings.setValue("repository", "ModWorkshop")
-        settings.setValue("url", url)
+        try:
+            meta = QSettings(os.path.join(self._organizer.downloadsPath(), archive_name + '.meta'), QSettings.Format.IniFormat, None)
+            settings.setValue("category", meta.value("category")+",")
+        except:
+            pass
         if not self.installed_mods:
             self._organizer.refresh()
 
@@ -95,6 +98,7 @@ class non_zipped_installer(mobase.IPluginInstallerCustom):
         ]
         return mobase.InstallResult.SUCCESS
 
+    #There can be no code in this function or it will attempt to unzip the file.
     def isArchiveSupported(self, tree: mobase.IFileTree) -> bool:  # type: ignore
         return True
 
@@ -113,7 +117,7 @@ class non_zipped_installer(mobase.IPluginInstallerCustom):
         return "Non-zipped Installer"
 
     def author(self):
-        return "MaskPlague, modworkshop"
+        return "MaskPlague, ModWorkshop"
 
     def isManualInstaller(self):
         return False
@@ -131,7 +135,7 @@ class non_zipped_installer(mobase.IPluginInstallerCustom):
         return 999
 
     def version(self):
-        return mobase.VersionInfo(0, 0, 2, 8)
+        return mobase.VersionInfo(0, 0, 4, 0)
 
 
 def createPlugin() -> mobase.IPluginInstaller:

@@ -6,14 +6,24 @@ from PyQt6.QtCore import QSettings, QTimer
 
 import mobase
 
+
 class non_zipped_installer(mobase.IPluginInstallerCustom):
     # Add supported file extensions that only need to be copied into a mod
     installed_mods: dict[str, list[str]]
 
     def supportedExtensions(self):
-        acceptedExt = {"pak", "utoc", "ucas", "bundle", "bk2", "ugc", "pck", "dll", "pck"}
-        if self._organizer.managedGame().gameName() == "Road to Vostok":
-            acceptedExt = {"vmz", "zip"}
+        acceptedExt = {
+            "pak",
+            "utoc",
+            "ucas",
+            "bundle",
+            "bk2",
+            "ugc",
+            "pck",
+            "dll",
+            "pck",
+            "vmz",
+        }
         return acceptedExt
 
     def updateMetaINI(self, file_path: str, new_mod: mobase.IModInterface):
@@ -49,9 +59,13 @@ class non_zipped_installer(mobase.IPluginInstallerCustom):
         settings.setValue("installationfile", archive_name)
         settings.setValue("repository", "ModWorkshop")
         try:
-            meta = QSettings(os.path.join(self._organizer.downloadsPath(), archive_name + '.meta'), QSettings.Format.IniFormat, None)
-            settings.setValue("category", meta.value("category")+",")
-        except:
+            meta = QSettings(
+                os.path.join(self._organizer.downloadsPath(), archive_name + ".meta"),
+                QSettings.Format.IniFormat,
+                None,
+            )
+            settings.setValue("category", meta.value("category") + ",")
+        except (TypeError, AttributeError):
             pass
         if not self.installed_mods:
             self._organizer.refresh()
@@ -98,7 +112,7 @@ class non_zipped_installer(mobase.IPluginInstallerCustom):
         ]
         return mobase.InstallResult.SUCCESS
 
-    #There can be no code in this function or it will attempt to unzip the file.
+    # There can be no code in this function or it will attempt to unzip the file.
     def isArchiveSupported(self, tree: mobase.IFileTree) -> bool:  # type: ignore
         return True
 
@@ -135,7 +149,7 @@ class non_zipped_installer(mobase.IPluginInstallerCustom):
         return 999
 
     def version(self):
-        return mobase.VersionInfo(0, 0, 4, 0)
+        return mobase.VersionInfo(0, 0, 4, 2)
 
 
 def createPlugin() -> mobase.IPluginInstaller:

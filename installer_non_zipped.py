@@ -21,7 +21,6 @@ class non_zipped_installer(mobase.IPluginInstallerCustom):
             "ugc",
             "pck",
             "dll",
-            "pck",
             "vmz",
         }
         return acceptedExt
@@ -45,28 +44,63 @@ class non_zipped_installer(mobase.IPluginInstallerCustom):
     ):
         if result != mobase.InstallResult.SUCCESS:
             return None
-        # Have to use this dumb method as "setInstallationFile" is not exposed to python for some reason...
+
         if new_mod.name() in self.installed_mods:
             archive_name, url = self.installed_mods.pop(new_mod.name())
             path = os.path.join(new_mod.absolutePath(), "meta.ini")
-            QTimer.singleShot(
-                4000, lambda: self.waitToUpdateINI(archive_name, url, path)
-            )  # type: ignore
+            self.waitToUpdateINI(archive_name, url, path, 0, None)
+
         return None
 
-    def waitToUpdateINI(self, archive_name: str, url: str, path: str):
+    def waitToUpdateINI(
+        self,
+        archive_name: str,
+        url: str,
+        path: str,
+        attempts: int,
+        last_mtime: float | None,
+    ):
+        if not os.path.exists(path):
+            QTimer.singleShot(
+                100,
+                lambda: self.waitToUpdateINI(
+                    archive_name, url, path, attempts + 1, None
+                ),
+            )
+            return
+
+        current_mtime = os.path.getmtime(path)
+
+        if last_mtime is None or current_mtime != last_mtime:
+            if attempts < 50:
+                QTimer.singleShot(
+                    100,
+                    lambda: self.waitToUpdateINI(
+                        archive_name,
+                        url,
+                        path,
+                        attempts + 1,
+                        current_mtime,
+                    ),
+                )
+                return
+
         settings = QSettings(path, QSettings.Format.IniFormat, None)
         settings.setValue("installationfile", archive_name)
         settings.setValue("repository", "ModWorkshop")
+
         try:
             meta = QSettings(
                 os.path.join(self._organizer.downloadsPath(), archive_name + ".meta"),
                 QSettings.Format.IniFormat,
                 None,
             )
-            settings.setValue("category", meta.value("category") + ",")
+            category = meta.value("category")
+            if category:
+                settings.setValue("category", str(category) + ",")
         except (TypeError, AttributeError):
             pass
+
         if not self.installed_mods:
             self._organizer.refresh()
 
@@ -97,6 +131,8 @@ class non_zipped_installer(mobase.IPluginInstallerCustom):
 
         # retrieve the mod-data-checker
         checker = self._organizer.gameFeatures().gameFeature(mobase.ModDataChecker)
+        if checker is None:
+            return mobase.InstallResult.FAILED
 
         tree = new_mod.fileTree()
         checkReturn = checker.dataLooksValid(tree)
@@ -149,7 +185,7 @@ class non_zipped_installer(mobase.IPluginInstallerCustom):
         return 999
 
     def version(self):
-        return mobase.VersionInfo(0, 0, 4, 2)
+        return mobase.VersionInfo(0, 0, 5, 0)
 
 
 def createPlugin() -> mobase.IPluginInstaller:
